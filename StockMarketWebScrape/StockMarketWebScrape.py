@@ -3,16 +3,18 @@ import csv
 import collections
 import matplotlib.pyplot as pypl
 
+# Give the post a score and rate whether the post is negative towards the stock or positive. 
 tickerList =[]
 realTickerList = []
 tickersFound = []
-removeTickerList = ['A','ANY','BIG','CARE','DO','FOR','IT','KIDS','ON','OR','ROLL','SEE','TWO','HAS','ALL','BE','EARN','GO','HE','I','JOB','BY','STAY','NICE','NEXT','FAT','VERY','TECH','FUND','SAVE','POST','PLAY','RUN', 'ARE',
-                    'TELL','ONE','AT','ERIC','GOOD','LOW','ONE','BEST','OUT','AN','TRUE','TYPE','THOR','BEAT','WELL','SO','PER','NOW','JOBS','CEO','ACT','REAL','AM','ROAD','NEW','ONCE','RH','ELSE','EVER','CASH','TURN','EARS',
-                    'SAFE','HOPE','LIFE','LAZY','HOME','INFO','TOO','ERA','EYE','LIVE','WORK','RING','WASH','DD','FAST','FIVE','LOVE','OLD','HEAR','DOOR','KEY','MAIN','MARK','MIND','RARE','ROSE','TREE','COST','GAIN','GRID',
-                    'GROW','PLAN','AGE','FORM','BIT','PUMP','RAMP','HI','MET','MAN','LAWS','WINS','FUN','BIO','GOLD','FLOW','SKY','MOD','SPOT','MEET','SITE','ROCK','EAT','LOAN','VIA', 'BEN', 'USA', 'AUTO', 'FLY','AIR','APPS',
-                    'CORE', 'GLAD', 'CARS', 'HOOK', 'CAR', 'AIM', 'GOLF', 'AGO', 'PAYS', 'GDP', 'BLUE', 'SUM', 'FLAT']
-goodKeywords = []
-badKeywords = []
+postsFound = {}
+tickersFoundDict = collections.OrderedDict()
+removeTickerList = ['I', 'A', 'DD', 'RH', 'CEO', 'FOR', 'ET', 'TV', 'USA', 'AM', 'AI', 'SA', 'NEXT', 'AT']
+goodKeywords = ["up", 'moon', 'long', 'buy', 'calls', 'great', 'good', 'underpriced', 'undervalued', 'amazing', 'super', 'terrific', 'excellent', 'awesome', 'strong', 'healthy', 'climb', 'dividend'
+                , 'cheap', 'bought', 'hold', 'growth', 'grow', 'strength', 'valuable', 'value', 'plus', 'surge', 'surges', 'deal', 'bull', 'bullish']
+badKeywords = ["drop", "drops", "dropped", "down", "plunge", "plunges", "plunged", "nonsense", 'bad', 'overvalued', 'debt', 'overpriced', 'unstable', 'uncertain', 'terrible', 'awful', 'poor'
+               , 'unfavourable', 'shit', 'crap', 'burn', 'atrocious', 'short', 'shorting', 'sell', 'puts', 'crash', 'top', 'peaked', 'peak', 'dump', 'damage', 'harm', 'weakness', 'bubble',
+              'fraud', 'inflate', 'bear', 'bearish', 'controversy']
 
 reddit = praw.Reddit(client_id='YiB7E1qC3zWBnQ', client_secret='pX17xnB_99muql3sq2MSb0sqFcA', user_agent='Webscrape')
 
@@ -62,17 +64,15 @@ def getPosts(): # 3
 
 def setPosts(listPosts): # 4
     for post in listPosts:
-        post.selftext = post.selftext.upper()
-        post.title = post.title.upper()
         titleList = post.title.split(' ')
         titleList = list(dict.fromkeys(titleList))
         textList = post.selftext.split(' ')
         textList = list(dict.fromkeys(textList))
-        tickerCheck(textList, post.num_comments)
+        tickerCheck(textList, post)
 
 
 
-def tickerCheck(list, num_comments): # 5
+def tickerCheck(list, post): # 5
     for ticker in realTickerList:
         for string in list:
             string.replace('$', '')
@@ -85,12 +85,13 @@ def tickerCheck(list, num_comments): # 5
             string.replace(':', '')
             if ticker == string:
                 tickersFound.append(ticker)
+                postsFound[post] = ticker
 
-def sumTicker():
+def sumTicker(): #6
     print("Adding up tickers...")
-    dictTicker = dict.fromkeys(tickersFound)
-    dT = collections.OrderedDict(dictTicker)
-    noDupeTicker = list(dictTicker)
+    dictTicker = dict.fromkeys(tickersFound) # turns tickerFound into a dict to remove duplicates
+    dT = collections.OrderedDict(dictTicker) # Orders list
+    noDupeTicker = list(dictTicker) # turns back into a list with duplicates removed
     
     for nTicker in noDupeTicker:
         loop = 0
@@ -98,12 +99,15 @@ def sumTicker():
             if nTicker == ticker:
                 loop += 1
         dT[str(nTicker)] = loop
+    
     print("Done.")
+    calculateLikeness()
     print(dT)
     drawGraph(dT)
 
-    
-def drawGraph(dictionary):
+def calculateLikeness():
+    pass
+def drawGraph(dictionary): #7
     values = sorted(dictionary.values(), reverse = True)
     keys = sorted(dictionary.keys(), key=dictionary.__getitem__, reverse = True)
     pypl.bar(keys, values)
