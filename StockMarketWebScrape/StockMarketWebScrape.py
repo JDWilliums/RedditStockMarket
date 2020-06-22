@@ -8,6 +8,7 @@ tickerList =[]
 realTickerList = []
 tickersFound = []
 postsFound = {}
+tickerScore = collections.OrderedDict()
 tickersFoundDict = collections.OrderedDict()
 removeTickerList = ['I', 'A', 'DD', 'RH', 'CEO', 'FOR', 'ET', 'TV', 'USA', 'AM', 'AI', 'SA', 'NEXT', 'AT']
 goodKeywords = ["up", 'moon', 'long', 'buy', 'calls', 'great', 'good', 'underpriced', 'undervalued', 'amazing', 'super', 'terrific', 'excellent', 'awesome', 'strong', 'healthy', 'climb', 'dividend'
@@ -50,7 +51,7 @@ def getPosts(): # 3
     smPosts = reddit.subreddit('stockmarket').hot(limit=30)
     stockPosts = reddit.subreddit('stocks').hot(limit=30)
     underPosts = reddit.subreddit('undervalued').hot(limit=10)
-    invPosts = reddit.subreddit('investing').hot(limit=50)
+    invPosts = reddit.subreddit('investing').hot(limit=30)
     rhPosts = reddit.subreddit('robinhood').hot(limit=20)
     print("Done.")
     print("Setting up all posts...")
@@ -101,16 +102,42 @@ def sumTicker(): #6
         dT[str(nTicker)] = loop
     
     print("Done.")
-    calculateLikeness()
     print(dT)
+    calculateLikeness()
     drawGraph(dT)
 
 def calculateLikeness():
-    pass
+    print('Calculating scores...')
+    for post in postsFound:
+        tempList = []
+        score = 0
+        for post2 in postsFound:
+            if postsFound.get(post) == postsFound.get(post2):
+                tempList.append(post)
+        for each in tempList:
+            words = each.selftext.lower()
+            words = words.split(' ')
+            for word in words:
+                for keyword in goodKeywords:
+                    if word == keyword:
+                        score += 1
+                for keyword in badKeywords:
+                    if word == keyword:
+                        score -= 1
+        tickerScore[postsFound.get(post)] = score
+    print(tickerScore)
+
+    print('Done.')
+                
 def drawGraph(dictionary): #7
     values = sorted(dictionary.values(), reverse = True)
     keys = sorted(dictionary.keys(), key=dictionary.__getitem__, reverse = True)
-    pypl.bar(keys, values)
+    keys2 = sorted(tickerScore.keys(), key=tickerScore.__getitem__, reverse = True)
+    values2 = sorted(tickerScore.values(), reverse = True)
+
+    pypl.bar(keys, values, width = 0.8, label = 'Amount of Posts')
+    pypl.bar(keys2, values2, width = 0.4, label = 'Positivity Score')
+    pypl.legend()
     pypl.xticks(rotation = 90)
     pypl.show()
 
@@ -118,5 +145,3 @@ readCSV()
 removeBadTickers()
 getPosts()
 sumTicker()
-
-
